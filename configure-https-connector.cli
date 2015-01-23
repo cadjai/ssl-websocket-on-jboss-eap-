@@ -1,0 +1,27 @@
+# Batch script to enable the NIO2 connector in the web subsystem of the server configuration file
+
+# Start batching commands
+batch
+
+# Add the https web connector 
+/subsystem=web/connector=https:add(enabled=true, name=https, secure=true, scheme=http, protocol="org.apache.coyote.http11.Http11NioProtocol", socket-binding=https)
+
+#Configure 2 way ssl on the web https connector
+/subsystem=web/connector=https/ssl=configuration:add(certificate-key-file="${jboss.server.config.dir}/wscerts/localhost.p12", password=password, ca-certificate-file="${jboss.server.config.dir}/wscerts/truststore.jks", ca-certificate-password=changeit, verify-client=true, key-alias=localhost,keystore-type=JKS, truststore-type=PKCS12)
+
+# Configure security domain for the application
+
+/subsystem=security/security-domain=require-certificate:add(cache-type=default)
+
+/subsystem=security/security-domain=require-certificate/authentication=classic:add(login-modules=[{code=>Certificate,flag=>required,module-options => {"verifier" => "org.jboss.security.auth.certs.AnyCertVerifier"}}])
+
+/subsystem=security/security-domain=require-certificate/jsse=classic:add(keystore={url => "${jboss.server.config.dir}/wscerts/localhost.p12", password => password, type => PKCS12}, truststore={url => "${jboss.server.config.dir}/wscerts/truststore.jks", password => changeit, type => JKS}, client-auth=true, client-alias=localhost})
+
+# Run the batch commands
+run-batch
+
+# Reload the server configuration
+:server-set-restart-required
+:reload
+
+
