@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Create a self signed key pair root CA certificate.
+# claudianus adjai
 
 function create_self_signing_cert_authority
 {
@@ -313,6 +314,12 @@ echo "Creating User Certificate $usrname.p12 for user named $usrname  ... \n"
  echo -e "\n*******************************************************\n"
 }
 
+eapHome=`echo $JBOSS_HOME`
+if [ -z "$eapHome" ]; then 
+echo "JBOSS_HOME needs to be set before running this script as it depends on the it configure certificates. Please set it or manually set theeapHome here in the script and re-run the script."
+exit
+fi
+eapConfigHome="$eapHome/standalone/configuration"
 certsdir="wscerts"
 
 javaHome=`echo $JAVA_HOME`
@@ -324,6 +331,7 @@ fi
 
 keytool=$javaHome/bin/keytool
 
+cd $eapHome/standalone/configuration
 mkdir $certsdir
 if [ $? -ne 0 ]
 then
@@ -378,10 +386,6 @@ list_ks_content $tsname $tspass
 create_user_certificate $cakey $cacert $usrname1 $usrpasswd $capwd $countrycode
 create_user_certificate $cakey $cacert $usrname2 $usrpasswd $capwd $countrycode
 create_user_certificate $cakey $cacert $usrname3 $usrpasswd $capwd $countrycode
-
-#import_signed_cert $tsname $usrname1 ${usrname1}.crt $tskeypass
-#import_signed_cert $tsname $usrname2 ${usrname2}.crt $tskeypass
-#import_signed_cert $tsname $usrname3 ${usrname3}.crt $tskeypass
 
 chmod 755 *
 
